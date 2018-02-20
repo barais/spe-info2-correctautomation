@@ -198,6 +198,8 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
                 crec = rec[sessionnumero];
 
                 console.log(sessionnumero)
+                testnames.push('sessionnumero');
+                resultjson['sessionnumero'] = sessionnumero;
                 var history = child_process.execSync('cp -r templateProjectCP3/CP3_' + sessionnumero + '/* ' + tmpfolder1.name, {
                     encoding: 'utf8'
                 });
@@ -283,8 +285,6 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
                 var md5files = glob.sync(path.join(tmpfolder1.name, '/src/main/scala/fr/istic/si2/checkpoint2/*.scala'));
                 md5files.forEach(function (f) {
                     var data = fs.readFileSync(f);
-                    console.log(path.posix.basename(f));
-                    console.log(md5(data));
                     resultjson['md5' + path.posix.basename(f)] = md5(data);
                     testnames.push('md5' + path.posix.basename(f));
                 });
