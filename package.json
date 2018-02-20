@@ -17,8 +17,12 @@
     "jsel": "^1.1.6",
     "json-query": "^2.2.2",
     "json2csv": "^3.11.5",
+    "md5": "^2.2.1",
+    "n-readlines": "^0.2.8",
     "nodemailer": "^2.7.0",
+    "nthline": "^1.0.1",
     "randomstring": "^1.1.5",
+    "read-nth-line": "^1.0.0",
     "tmp": "0.0.31",
     "xml2js": "^0.4.19",
     "zlib": "^1.0.5"

@@ -234,8 +234,8 @@ app.post('/upload', function(req, res){
 //          res.end(data.toString());
 
         //  console.log('will delete ' + tmpfolder.name + ' '+tmpfolder1.name + ' '+tmpfolder2.name + ' ');
-          var history = child_process.execSync('rm -rf '+ tmpfolder.name + ' '+tmpfolder1.name + ' '+tmpfolder2.name, { encoding: 'utf8' });
-          console.log(history);
+         // var history = child_process.execSync('rm -rf '+ tmpfolder.name + ' '+tmpfolder1.name + ' '+tmpfolder2.name, { encoding: 'utf8' });
+         // console.log(history);
           if (sendEmail){
             sendEmail(data.toString());
           }

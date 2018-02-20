@@ -16,7 +16,25 @@ var json2csv = require('json2csv');
 var jsonQuery = require('json-query')
 var si2 = require('./SI2.json');
 var util = require('util');
+var md5 = require('md5');
 var fieldNames = [];
+
+/*
+
+bestOfBaker 2
+theWall 2
+aPropos 4
+genre 4
+
+allerRetour 4+1
+chiffreGauche 4+1
+
+
+allerRetourOKrec
+chiffreGaucheOKrec
+
+
+*/
 
 var mavenhome = '/opt/apache-maven-3.5.0/';
 var isScala = true;
@@ -35,7 +53,7 @@ function precisionRound(number, precision) {
 
 
 function people(filename /*17011558 */ ) {
-    var key = path.posix.basename(filename).replace('CP1_', '').replace('.zip', '')
+    var key = path.posix.basename(filename).replace('CP2_', '').replace('.zip', '')
 
     /*
   people.NUMERO;
@@ -114,6 +132,7 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
 
 
             if (err) {
+                note =0;
                 resultjson['errorcode'] = 7;
             } else {
                 var error = false;
@@ -201,6 +220,14 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
                 }
 
                 resultjson['errorcode'] = errorcode;
+                var md5files = glob.sync(path.join(tmpfolder1.name, '/src/main/scala/fr/istic/si2/checkpoint2/*.scala'));
+                md5files.forEach(function (f) {
+                    var data = fs.readFileSync(f);
+                    console.log(path.posix.basename(f));
+                    console.log(md5(data));
+                    resultjson['md5'+path.posix.basename(f)] = md5(data);
+                    testnames.push('md5'+path.posix.basename(f));
+                });
 
                 if (!error) {
 
@@ -228,12 +255,13 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
                         });
                     });
                     var defineFailure = '';
+                    var testsuitemalus =  {'bestOfBaker': 0,'theWall': 0,'aPropos': 0,'genre': 0,'allerRetour': 0,'allerRetourRec': 0,'chiffreGauche': 0,'chiffreGaucheRec': 0};
                     files.forEach(function (f) {
                         var data = fs.readFileSync(f);
                         var xml = parseSync(data);                        
                         xml.testsuite.testcase.forEach(function (testcase1) {
                             var name = testcase1.$.name;
-                            console.log(name);
+                            //console.log(name);
                             resultjson[name] = 0;
                             if (testcase1.skipped != null) {
                                 resultjson[name] = resultjson[name] + 1;
@@ -244,86 +272,113 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
                             if (testcase1.failure != null) {
                                 resultjson[name] = resultjson[name] + 1;
                             }
-                            /*var skippedname = 'skipped' + name
-                            var errorsname = 'error' + name
-                            var failuresname = 'failure' + name
-                            if (testcase1.skipped != null) {
-                                resultjson[skippedname] = 1;
-                            } else {
-                                resultjson[skippedname] = 0;
-                            }
-                            if (testcase1.error != null) {
-                                resultjson[errorsname] = 1;
-                            } else {
-                                resultjson[errorsname] = 0;
-                            }
-                            if (testcase1.failure != null) {
-                                resultjson[failuresname] = 1;
-                            } else {
-                                resultjson[failuresname] = 0;
-                            }*/
 
                             if (name.includes('Defined')) {
                                 if (resultjson[name] == 0) {
-                                    note = note + 1;
+                                    if (name.includes('bestOfBaker') || name.includes('theWall')) {
+                                        note = note + 0.5;
+                                    }else if (name.includes('aPropos') || name.includes('genre')){
+                                        note = note + 1;
+                                    }else if (name.includes('allerRetour') || name.includes('chiffreGauche')){
+                                        note = note + 2;
+                                    }else{
+                                        console.log('oups');
+                                    }
                                 } else {
                                     defineFailure = defineFailure + name + ',';
                                 }
                             }
                         });
-                        console.log(defineFailure);
+                        //console.log(defineFailure);
+
                         xml.testsuite.testcase.forEach(function (testcase1) {
                             var name = testcase1.$.name;
                             if (!name.includes('Defined')) {
-                                if (name.includes('max') && !defineFailure.includes('max')) {
-                                    var malus = resultjson[name] * 0.33
-                                    if (malus > 1)
-                                        note = note -1;
-                                    else 
-                                        note = note -malus;
-                                } else if (name.includes('estMultiple') && !defineFailure.includes('estMultiple')) {
-                                    var malus = resultjson[name] * 0.17
-                                    if (malus > 1)
-                                        note = note -1;
-                                    else 
-                                        note = note -malus;
-                                } else if (name.includes('xor1') && !defineFailure.includes('xor1')) {
-                                    var malus = resultjson[name] * 0.2
-                                    if (malus > 1)
-                                        note = note -1;
-                                    else 
-                                        note = note -malus;
-                                } else if (name.includes('xor2') && !defineFailure.includes('xor2')) {
-                                    var malus = resultjson[name] * 0.2
-                                    if (malus > 1)
-                                        note = note -1;
-                                    else 
-                                        note = note -malus;
-                                } else if (name.includes('signe') && !defineFailure.includes('signe')) {
-                                    var malus = resultjson[name] * 0.15
-                                    if (malus > 1)
-                                        note = note -1;
-                                    else 
-                                        note = note -malus;
+                                if (name.includes('bestOfBaker') && !defineFailure.includes('bestOfBaker')) {
+                                    testsuitemalus['bestOfBaker'] = testsuitemalus['bestOfBaker'] +(resultjson[name] * 0.25)
                                 }
+                                else if (name.includes('theWall') && !defineFailure.includes('theWall')) {
+                                    testsuitemalus['theWall'] = testsuitemalus['theWall'] +(resultjson[name] * 0.25)
+                                
+                                }
+                                else if (name.includes('aPropos') && !defineFailure.includes('aPropos')) {
+                                    testsuitemalus['aPropos'] = testsuitemalus['aPropos'] +(resultjson[name] * 0.25)
+                                } 
+                                else if (name.includes('genre') && !defineFailure.includes('genre')) {
+                                    testsuitemalus['genre'] = testsuitemalus['genre'] +(resultjson[name] * 0.25)
+                                } 
+                                else if (name.includes('allerRetour') && !defineFailure.includes('allerRetour')) {
+                                    if (name.includes('OKrec')){
+                                        testsuitemalus['allerRetourRec']  = (resultjson[name]*1.5);
+                                    }
+                                    else{
+                                        testsuitemalus['allerRetour']  = testsuitemalus['allerRetour'] +(resultjson[name] * 0.5)
+                                    }
+                                   
+                                }else if (name.includes('chiffreGauche') && !defineFailure.includes('chiffreGauche')) {
+                                    if (name.includes('OKrec')){
+                                        testsuitemalus['chiffreGaucheRec']  =  (resultjson[name]*1.5);
+                                    }
+                                    else{
+                                        testsuitemalus['chiffreGauche']  = testsuitemalus['chiffreGauche'] +(resultjson[name] * 0.5)
+                                    }
+                                } 
 
                             }
                         });
-
+                       
 
                         ntests = ntests + parseInt(xml.testsuite.$.tests);
                         nerrors = nerrors + parseInt(xml.testsuite.$.errors);
                         nskips = nskips + parseInt(xml.testsuite.$.skipped);
                         nfailures = nfailures + parseInt(xml.testsuite.$.failures);
 
-
+ 
                     });
+                    console.log('note ' +note);
+                    
+                    //console.log(testsuitemalus['bestOfBaker']);
+
+                    if (testsuitemalus['bestOfBaker']>0.5){
+                        note = note -0.5;
+                    }else{
+                        note = note -testsuitemalus['bestOfBaker'];
+                    }
+                    if (testsuitemalus['theWall']>0.5){
+                        note = note -0.5;
+                    }else{
+                        note = note -testsuitemalus['theWall'];
+                    }
+                    if (testsuitemalus['aPropos']>1){
+                        note = note -1;
+                    }else{
+                        note = note -testsuitemalus['aPropos'];
+                    }if (testsuitemalus['genre']>1){
+                        note = note -1;
+                    }else{
+                        note = note -testsuitemalus['genre'];
+                    }if (testsuitemalus['allerRetour']>2){
+                        note = note -2;
+                    }else{
+                        note = note -testsuitemalus['allerRetour'];
+                        if (testsuitemalus['allerRetour'] == 0)
+                            note = note -testsuitemalus['allerRetourRec'];
+                    }if (testsuitemalus['chiffreGauche']>2){
+                        note = note -2;
+                    }else{
+                        note = note -testsuitemalus['chiffreGauche'];
+                        if (testsuitemalus['chiffreGauche'] == 0)
+                            note = note -testsuitemalus['chiffreGaucheRec'];
+                    }
+                    console.log('testsuitemalus ' + JSON.stringify(testsuitemalus));
+                    console.log('note ' +note);
+
 
                     resultjson.skippedtotal = parseInt(nskips)
                     resultjson.failurestotal = parseInt(nfailures)
                     resultjson.errorstotal = parseInt(nerrors)
                     resultjson.teststotal = parseInt(ntests)
-                    console.log(note);
+                    console.log('note' + note);
                     var data = fs.readFileSync(path.join(tmpfolder1.name, '/scalastyle_config.xml'));
                     var xml = parseSync(data);
 
@@ -342,6 +397,96 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
                     var xml = parseSync(data);
                     var malus1 = 0;
                     var malus2 = 0;
+                    if (xml.checkstyle.file != null && util.isArray(xml.checkstyle.file)){
+                        xml.checkstyle.file.forEach(function (file1) {
+                        if (file1 != null && util.isArray(file1.error)) {
+                            file1.error.forEach(function (error1) {
+                                if (error1.$.severity === 'warning') {
+                                    resultjson['warn(' + error1.$.source + ')'] = resultjson['warn(' + error1.$.source + ')'] + 1;
+                                    if ('org.scalastyle.scalariform.ScalaDocChecker' === error1.$.source ||
+                                        'org.scalastyle.scalariform.ReturnChecker' == error1.$.source) {
+                                        malus1 = 1;
+                                    } else if ('org.scalastyle.scalariform.RedundantIfChecker' === error1.$.source ||
+                                        'org.scalastyle.scalariform.SimplifyBooleanExpressionChecker' === error1.$.source) {
+                                        //
+                                    } else if ('org.scalastyle.scalariform.NotImplementedErrorUsage' === error1.$.source) {
+    
+                                    } else if (['org.scalastyle.file.HeaderMatchesChecker',
+                                            'org.scalastyle.file.WhitespaceEndOfLineChecker',
+                                            'org.scalastyle.scalariform.EqualsHashCodeChecker',
+                                            'org.scalastyle.scalariform.IllegalImportsChecker',
+                                            'org.scalastyle.scalariform.MagicNumberChecker',
+                                            'org.scalastyle.scalariform.NoCloneChecker',
+                                            'org.scalastyle.scalariform.NoFinalizeChecker',
+                                            'org.scalastyle.scalariform.CovariantEqualsChecker',
+                                            'org.scalastyle.file.RegexChecker',
+                                            'org.scalastyle.scalariform.NumberOfTypesChecker',
+                                            'org.scalastyle.scalariform.CyclomaticComplexityChecker',
+                                            'org.scalastyle.scalariform.IfBraceChecker',
+                                            'org.scalastyle.scalariform.NumberOfMethodsInTypeChecker',
+                                            'org.scalastyle.file.NewLineAtEofChecker',
+                                            'org.scalastyle.file.NoNewLineAtEofChecker',
+                                            'org.scalastyle.scalariform.WhileChecker',
+                                            'org.scalastyle.scalariform.VarLocalChecker',
+                                            'org.scalastyle.scalariform.TokenChecker',
+                                            'org.scalastyle.scalariform.DeprecatedJavaChecker',
+                                            'org.scalastyle.scalariform.UnderscoreImportChecker'
+                                        ].includes(error1.$.source)) {
+    
+                                    } else {
+                                        malus2 = 0.5;
+                                    }
+                                } else if (error1.$.severity === 'error') {
+                                    resultjson['err(' + error1.$.source + ')'] = resultjson['err(' + error1.$.source + ')'] + 1;
+                                    note = 0;
+                                }
+                            });
+                        } 
+                        else {
+                            if (file1 != null && file1.error.$.severity === 'warning') {
+                                resultjson['warn(' + file1.error.$.source + ')'] = resultjson['warn(' + file1.error.$.source + ')'] + 1;
+                                var error1 = file1.error;
+                                if ('org.scalastyle.scalariform.ScalaDocChecker' === error1.$.source ||
+                                    'org.scalastyle.scalariform.ReturnChecker' == error1.$.source) {
+                                    malus1 = 1;
+                                } else if ('org.scalastyle.scalariform.RedundantIfChecker' === error1.$.source ||
+                                    'org.scalastyle.scalariform.SimplifyBooleanExpressionChecker' === error1.$.source) {
+                                    //
+                                } else if ('org.scalastyle.scalariform.NotImplementedErrorUsage' === error1.$.source) {
+    
+                                } else if (['org.scalastyle.file.HeaderMatchesChecker',
+                                        'org.scalastyle.file.WhitespaceEndOfLineChecker',
+                                        'org.scalastyle.scalariform.EqualsHashCodeChecker',
+                                        'org.scalastyle.scalariform.IllegalImportsChecker',
+                                        'org.scalastyle.scalariform.MagicNumberChecker',
+                                        'org.scalastyle.scalariform.NoCloneChecker',
+                                        'org.scalastyle.scalariform.NoFinalizeChecker',
+                                        'org.scalastyle.scalariform.CovariantEqualsChecker',
+                                        'org.scalastyle.file.RegexChecker',
+                                        'org.scalastyle.scalariform.NumberOfTypesChecker',
+                                        'org.scalastyle.scalariform.CyclomaticComplexityChecker',
+                                        'org.scalastyle.scalariform.IfBraceChecker',
+                                        'org.scalastyle.scalariform.NumberOfMethodsInTypeChecker',
+                                        'org.scalastyle.file.NewLineAtEofChecker',
+                                        'org.scalastyle.file.NoNewLineAtEofChecker',
+                                        'org.scalastyle.scalariform.WhileChecker',
+                                        'org.scalastyle.scalariform.VarLocalChecker',
+                                        'org.scalastyle.scalariform.TokenChecker',
+                                        'org.scalastyle.scalariform.DeprecatedJavaChecker',
+                                        'org.scalastyle.scalariform.UnderscoreImportChecker'
+                                    ].includes(error1.$.source)) {
+    
+                                } else {
+                                    malus1 = 0.5;
+                                }
+    
+                            } else if (xml.checkstyle.file != null && xml.checkstyle.file.error.$.severity === 'error') {
+                                resultjson['err(' + xml.checkstyle.file.error.$.source + ')'] = resultjson['err(' + xml.checkstyle.file.error.$.source + ')'] + 1;
+                                note = 0;
+                            }
+                        }
+                    })}
+                    else {
                     if (xml.checkstyle.file != null && util.isArray(xml.checkstyle.file.error)) {
                         xml.checkstyle.file.error.forEach(function (error1) {
                             if (error1.$.severity === 'warning') {
@@ -385,6 +530,8 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
                             }
                         });
                     } else {
+//                        console.log(util.isArray(xml.checkstyle.file.error))
+//                        console.log(JSON.stringify(xml.checkstyle.file))
                         if (xml.checkstyle.file != null && xml.checkstyle.file.error.$.severity === 'warning') {
                             resultjson['warn(' + xml.checkstyle.file.error.$.source + ')'] = resultjson['warn(' + xml.checkstyle.file.error.$.source + ')'] + 1;
                             var error1 = xml.checkstyle.file.error;
@@ -427,7 +574,7 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
                             note = 0;
                         }
                     }
-
+                }
                     if (note>0){
                         note = note -malus1 -malus2;
                     }
@@ -451,7 +598,7 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
 
                     resultjson['note'] = note;
 
-
+                    console.log('note ' + note)
 
 
 
@@ -484,9 +631,9 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
                 fieldNames = testnames;
             }
 
-            //var history = child_process.execSync('rm -rf ' + tmpfolder.name + ' ' + tmpfolder1.name, {
-            //    encoding: 'utf8'
-            //});
+            var history = child_process.execSync('rm -rf ' + tmpfolder.name + ' ' + tmpfolder1.name, {
+                encoding: 'utf8'
+            });
 
             var result = json2csv({
                 data: resultsjson,

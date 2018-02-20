@@ -18,6 +18,23 @@ var si2 = require('./SI2.json');
 var util = require('util');
 var fieldNames = [];
 
+/*
+
+bestOfBaker 2
+theWall 2
+aPropos 4
+genre 4
+
+allerRetour 4+1
+chiffreGauche 4+1
+
+
+allerRetourOKrec
+chiffreGaucheOKrec
+
+
+*/
+
 var mavenhome = '/opt/apache-maven-3.5.0/';
 var isScala = true;
 
@@ -35,7 +52,7 @@ function precisionRound(number, precision) {
 
 
 function people(filename /*17011558 */ ) {
-    var key = path.posix.basename(filename).replace('CP1_', '').replace('.zip', '')
+    var key = path.posix.basename(filename).replace('CP2_', '').replace('.zip', '')
 
     /*
   people.NUMERO;
@@ -114,6 +131,7 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
 
 
             if (err) {
+                note =0;
                 resultjson['errorcode'] = 7;
             } else {
                 var error = false;
@@ -265,58 +283,96 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
 
                             if (name.includes('Defined')) {
                                 if (resultjson[name] == 0) {
-                                    note = note + 1;
+                                    if (name.includes('bestOfBaker') || name.includes('theWall')) {
+                                        note = note + 0.5;
+                                    }else if (name.includes('aPropos') || name.includes('genre')){
+                                        note = note + 1;
+                                    }else if (name.includes('allerRetour') || name.includes('chiffreGauche')){
+                                        note = note + 2;
+                                    }else{
+                                        console.log('oups');
+                                    }
                                 } else {
                                     defineFailure = defineFailure + name + ',';
                                 }
                             }
                         });
-                        console.log(defineFailure);
+                        //console.log(defineFailure);
+                        var testsuitemalus =  [['bestOfBaker', 0],['theWall', 0],['aPropos', 0],['genre', 0],['allerRetour', 0],['chiffreGauche', 0]];
+
                         xml.testsuite.testcase.forEach(function (testcase1) {
                             var name = testcase1.$.name;
                             if (!name.includes('Defined')) {
-                                if (name.includes('max') && !defineFailure.includes('max')) {
-                                    var malus = resultjson[name] * 0.33
-                                    if (malus > 1)
-                                        note = note -1;
-                                    else 
-                                        note = note -malus;
-                                } else if (name.includes('estMultiple') && !defineFailure.includes('estMultiple')) {
-                                    var malus = resultjson[name] * 0.17
-                                    if (malus > 1)
-                                        note = note -1;
-                                    else 
-                                        note = note -malus;
-                                } else if (name.includes('xor1') && !defineFailure.includes('xor1')) {
-                                    var malus = resultjson[name] * 0.2
-                                    if (malus > 1)
-                                        note = note -1;
-                                    else 
-                                        note = note -malus;
-                                } else if (name.includes('xor2') && !defineFailure.includes('xor2')) {
-                                    var malus = resultjson[name] * 0.2
-                                    if (malus > 1)
-                                        note = note -1;
-                                    else 
-                                        note = note -malus;
-                                } else if (name.includes('signe') && !defineFailure.includes('signe')) {
-                                    var malus = resultjson[name] * 0.15
-                                    if (malus > 1)
-                                        note = note -1;
-                                    else 
-                                        note = note -malus;
+                                if (name.includes('bestOfBaker') && !defineFailure.includes('bestOfBaker')) {
+                                    testsuitemalus['bestOfBaker'] = testsuitemalus['bestOfBaker'] +(resultjson[name] * 0.25)
                                 }
+                                else if (name.includes('theWall') && !defineFailure.includes('theWall')) {
+                                    testsuitemalus['theWall'] = testsuitemalus['theWall'] +(resultjson[name] * 0.25)
+                                
+                                }
+                                else if (name.includes('aPropos') && !defineFailure.includes('aPropos')) {
+                                    testsuitemalus['aPropos'] = testsuitemalus['aPropos'] +(resultjson[name] * 0.25)
+                                } 
+                                else if (name.includes('genre') && !defineFailure.includes('genre')) {
+                                    testsuitemalus['genre'] = testsuitemalus['genre'] +(resultjson[name] * 0.25)
+                                } 
+                                else if (name.includes('allerRetour') && !defineFailure.includes('allerRetour')) {
+                                    if (name.includes('OKrec')){
+                                        testsuitemalus['allerRetour']  = testsuitemalus['allerRetour'] +1.75;
+                                    }
+                                    else{
+                                        testsuitemalus['allerRetour']  = testsuitemalus['allerRetour'] +resultjson[name] * 0.5
+                                    }
+                                   
+                                }else if (name.includes('chiffreGauche') && !defineFailure.includes('chiffreGauche')) {
+                                    if (name.includes('OKrec')){
+                                        testsuitemalus['chiffreGauche']  = testsuitemalus['chiffreGauche'] +1.75;
+                                    }
+                                    else{
+                                        testsuitemalus['chiffreGauche']  = testsuitemalus['chiffreGauche'] +resultjson[name] * 0.5
+                                    }
+                                } 
 
                             }
                         });
+                       
+                        if (testsuitemalus.get('bestOfBaker')>0.5){
+                            note = note -0.5;
+                        }else{
+                            note = note -testsuitemalus.get('bestOfBaker');
+                        }
+                        if (testsuitemalus.get('theWall')>0.5){
+                            note = note -0.5;
+                        }else{
+                            note = note -testsuitemalus.get('theWall');
+                        }
+                        if (testsuitemalus.get('aPropos')>1){
+                            note = note -1;
+                        }else{
+                            note = note -testsuitemalus.get('aPropos');
+                        }if (testsuitemalus.get('genre')>1){
+                            note = note -1;
+                        }else{
+                            note = note -testsuitemalus.get('genre');
+                        }if (testsuitemalus.get('allerRetour')>2){
+                            note = note -2;
+                        }else{
+                            note = note -testsuitemalus.get('allerRetour');
+                        }if (testsuitemalus.get('chiffreGauche')>2){
+                            note = note -2;
+                        }else{
+                            note = note -testsuitemalus.get('chiffreGauche');
+                        }
 
+
+                        console.log('testsuitemalus ' + testsuitemalus);
 
                         ntests = ntests + parseInt(xml.testsuite.$.tests);
                         nerrors = nerrors + parseInt(xml.testsuite.$.errors);
                         nskips = nskips + parseInt(xml.testsuite.$.skipped);
                         nfailures = nfailures + parseInt(xml.testsuite.$.failures);
 
-
+ 
                     });
 
                     resultjson.skippedtotal = parseInt(nskips)
