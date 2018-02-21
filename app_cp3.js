@@ -188,7 +188,7 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
                 var liner = new lineByLine(tmpfolder.name + '/CP3/src/.fileid');
                 var line;
                 var lineNumber = 0;
-                while (lineNumber < 5 && (line = liner.next())) {
+                while (lineNumber < 6 && (line = liner.next())) {
                     if (lineNumber == 0) {
                         resultjson['id_fileid'] = line.toString('ascii');
                         testnames.push('id_fileid');

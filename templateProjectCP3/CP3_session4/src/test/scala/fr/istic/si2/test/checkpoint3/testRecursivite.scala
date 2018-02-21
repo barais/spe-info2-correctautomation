@@ -39,7 +39,7 @@ class AARecursiviteDefinitionTest {
    * queLesVrais est bien définie
    */
   @Test(timeout = 1000)
-  def queLesVraDefined {
+  def queLesVraisDefined {
     isDefined(queLesVrais(Nil))
   }
 
