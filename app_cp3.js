@@ -128,7 +128,7 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
 
             val['session7'] = ['v1', 'v2', 'v3']
             fun['session7'] = ['estToutTerrain', 'prixTotal']
-            rec['session7'] = ['opposes','nbZeros']
+            rec['session7'] = ['opposes', 'nbZeros']
 
             val['session8'] = ['t1', 't2', 't3']
             fun['session8'] = ['ticketValide', 'prixTicket']
@@ -189,17 +189,36 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
                 var line;
                 var lineNumber = 0;
                 while (lineNumber < 5 && (line = liner.next())) {
-                    //console.log('Line ' + lineNumber + ': ' + line.toString('ascii'));
+                    if (lineNumber == 0) {
+                        resultjson['id_fileid'] = line.toString('ascii');
+                        testnames.push('id_fileid');
+                    } else if (lineNumber == 1) {
+                        resultjson['name_fileid'] = line.toString('ascii');
+                        testnames.push('name_fileid');
+                    } else if (lineNumber == 2) {
+                        resultjson['hash1_fileid'] = line.toString('ascii');
+                        testnames.push('hash1_fileid');
+                    } else if (lineNumber == 3) {
+                        resultjson['date_fileid'] = line.toString('ascii');
+                        testnames.push('date_fileid');
+                    } else if (lineNumber == 4) {
+                        sessionnumero = line.toString('ascii').replace(' ', '');
+                        resultjson['sessionnumero'] = sessionnumero;
+                        testnames.push('sessionnumero');
+                    } else if (lineNumber == 5) {
+                        resultjson['hash2_fileid'] = line.toString('ascii');
+                        testnames.push('hash2_fileid');
+                    }
                     lineNumber++;
                 }
-                sessionnumero = line.toString('ascii').replace(' ', '');
+//                sessionnumero = line.toString('ascii').replace(' ', '');
                 cval = val[sessionnumero];
                 cfun = fun[sessionnumero];
                 crec = rec[sessionnumero];
 
                 console.log(sessionnumero)
-                testnames.push('sessionnumero');
-                resultjson['sessionnumero'] = sessionnumero;
+//                testnames.push('sessionnumero');
+//                resultjson['sessionnumero'] = sessionnumero;
                 var history = child_process.execSync('cp -r templateProjectCP3/CP3_' + sessionnumero + '/* ' + tmpfolder1.name, {
                     encoding: 'utf8'
                 });
@@ -282,7 +301,7 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
 
                 resultjson['errorcode'] = errorcode;
 
-                var md5files = glob.sync(path.join(tmpfolder1.name, '/src/main/scala/fr/istic/si2/checkpoint2/*.scala'));
+                var md5files = glob.sync(path.join(tmpfolder1.name, '/src/main/scala/fr/istic/si2/checkpoint3/*.scala'));
                 md5files.forEach(function (f) {
                     var data = fs.readFileSync(f);
                     resultjson['md5' + path.posix.basename(f)] = md5(data);
