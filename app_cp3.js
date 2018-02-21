@@ -38,7 +38,7 @@ function precisionRound(number, precision) {
 
 
 function people(filename /*17011558 */ ) {
-    var key = path.posix.basename(filename).replace('CP2_', '').replace('.zip', '')
+    var key = path.posix.basename(filename).replace('CP3_', '').replace('.zip', '')
 
     /*
   people.NUMERO;
@@ -128,7 +128,7 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
 
             val['session7'] = ['v1', 'v2', 'v3']
             fun['session7'] = ['estToutTerrain', 'prixTotal']
-            rec['session7'] = ['opposes', 'sommeEgalA']
+            rec['session7'] = ['opposes','nbZeros']
 
             val['session8'] = ['t1', 't2', 't3']
             fun['session8'] = ['ticketValide', 'prixTicket']
@@ -346,7 +346,7 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
                                     } else if (name.includes(crec[1])) {
                                         note = note + 9;
                                     } else {
-                                        console.log('oups');
+                                        console.log('oups ' + name);
                                     }
                                 } else {
                                     defineFailure = defineFailure + name + ',';
@@ -694,9 +694,9 @@ async function extractanddo(file, tmpfolder, tmpfolder1) {
                 fieldNames = testnames;
             }
 
-            //var history = child_process.execSync('rm -rf ' + tmpfolder.name + ' ' + tmpfolder1.name, {
-            //    encoding: 'utf8'
-            //});
+            var history = child_process.execSync('rm -rf ' + tmpfolder.name + ' ' + tmpfolder1.name, {
+                encoding: 'utf8'
+            });
 
             var result = json2csv({
                 data: resultsjson,
